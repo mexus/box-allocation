@@ -18,7 +18,7 @@ pub fn naïve<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8]> {
 /// allocation, then filled.
 #[inline(never)]
 pub fn maybe_uninit<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8]> {
-    let mut array = {
+    let mut array: Box<[MaybeUninit<u8>; N]> = {
         let begin = if N == 0 {
             Box::into_raw(Box::new([] as [u8; 0])).cast::<u8>()
         } else {
@@ -31,11 +31,14 @@ pub fn maybe_uninit<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8
             // Safety: so long as T: Sized, a Box<T> is guaranteed to be represented
             // as a single pointer, see
             // https://doc.rust-lang.org/std/boxed/index.html#memory-layout
-            Box::from_raw(begin.cast::<[MaybeUninit<u8>; N]>())
+            Box::from_raw(begin.cast())
         }
     };
     array.iter_mut().zip(i).for_each(|(destination, source)| {
         destination.write(source);
     });
-    unsafe { transmute::<_, Box<[u8; N]>>(array) }
+    unsafe { 
+        // Safety: Box<[MaybeUninit<u8>; N]> and Box<[u8; N]> have the same
+        // layout.
+        transmute::<_, Box<[u8; N]>>(array) }
 }
