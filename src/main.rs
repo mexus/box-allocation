@@ -16,16 +16,23 @@ struct Option {
     /// whether or not use naïve algorithm.
     #[argh(switch, long = "naive")]
     naive: bool,
+
+    /// whether or not use "not-that-naïve" algorithm. Overrides the "naive"
+    /// flag.
+    #[argh(switch, long = "not-that-naive")]
+    not_that_naive: bool,
 }
 
 fn main() {
     const N: usize = 1024 * 1024 * 1024;
 
-    let Option { naive } = argh::from_env();
+    let Option { naive, not_that_naive } = argh::from_env();
     let data = Xoshiro256PlusPlus::seed_from_u64(10).sample_iter(Standard);
 
     let begin = Instant::now();
-    let boxed = if naive {
+    let boxed = if not_that_naive {
+        not_that_naïve::<_, N>(data)
+    } else if naive {
         naïve::<_, N>(data)
     } else {
         maybe_uninit::<_, N>(data)

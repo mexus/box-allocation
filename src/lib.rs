@@ -5,7 +5,10 @@ use std::{
 
 /// A "naïve" approach: an array on the stack is created, then filled and boxed.
 #[inline(never)]
-pub fn naïve<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8]> {
+pub fn naïve<I, const N: usize>(i: I) -> Box<[u8]>
+where
+    I: IntoIterator<Item = u8>,
+{
     let mut array = [0u8; N];
     array
         .iter_mut()
@@ -14,10 +17,27 @@ pub fn naïve<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8]> {
     Box::new(array)
 }
 
+/// A "not-that-naïve" approach: an array on the stack is created and immediately boxed, then filled.
+#[inline(never)]
+pub fn not_that_naïve<I, const N: usize>(i: I) -> Box<[u8]>
+where
+    I: IntoIterator<Item = u8>,
+{
+    let mut array = Box::new([0u8; N]);
+    array
+        .iter_mut()
+        .zip(i)
+        .for_each(|(destination, source)| *destination = source);
+    array
+}
+
 /// A "maybe-uninit" approach: an "uninitialized" box is created from an
 /// allocation, then filled.
 #[inline(never)]
-pub fn maybe_uninit<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8]> {
+pub fn maybe_uninit<I, const N: usize>(i: I) -> Box<[u8]>
+where
+    I: IntoIterator<Item = u8>,
+{
     let mut array: Box<[MaybeUninit<u8>; N]> = {
         let begin = if N == 0 {
             Box::into_raw(Box::new([] as [u8; 0])).cast::<u8>()
@@ -37,8 +57,9 @@ pub fn maybe_uninit<I: IntoIterator<Item = u8>, const N: usize>(i: I) -> Box<[u8
     array.iter_mut().zip(i).for_each(|(destination, source)| {
         destination.write(source);
     });
-    unsafe { 
+    unsafe {
         // Safety: Box<[MaybeUninit<u8>; N]> and Box<[u8; N]> have the same
         // layout.
-        transmute::<_, Box<[u8; N]>>(array) }
+        transmute::<_, Box<[u8; N]>>(array)
+    }
 }
