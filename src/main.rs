@@ -26,8 +26,14 @@ struct Option {
 fn main() {
     const N: usize = 1024 * 1024 * 1024;
 
-    let Option { naive, not_that_naive } = argh::from_env();
-    let data = Xoshiro256PlusPlus::seed_from_u64(10).sample_iter(Standard);
+    let Option {
+        naive,
+        not_that_naive,
+    } = argh::from_env();
+    let data: Vec<u8> = Xoshiro256PlusPlus::seed_from_u64(10)
+        .sample_iter(Standard)
+        .take(N)
+        .collect();
 
     let begin = Instant::now();
     let boxed = if not_that_naive {

@@ -2,7 +2,7 @@ use box_large_array::*;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::{distributions::Standard, Rng, SeedableRng};
 
-const N: usize = 1024 * 1024;
+const N: usize = 2 * 1024 * 1024;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let data: Vec<u8> = rand_xoshiro::Xoshiro256PlusPlus::seed_from_u64(10)
