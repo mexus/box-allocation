@@ -9,7 +9,6 @@ authors = ["mexus < null@mexus.xyz >"]
 
 [dependencies]
 rand = "0.8.4"
-rand_xorshift = "0.3.0"
 rand_xoshiro = "0.6.0"
 
 argh = "0.1.6"
